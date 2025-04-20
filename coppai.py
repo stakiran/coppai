@@ -52,9 +52,9 @@ def expand_variables(text):
 
 def show_popup_menu(snippets):
     root = tk.Tk()
-    root.withdraw()
-    # ポップアップメニュー表示のために最小限のウィンドウサイズに設定
-    root.geometry('1x1+0+0')
+    root.title("coppai - スニペット選択")
+    # ウィンドウを最小化せず、適切なサイズで表示
+    root.geometry('400x300+100+100')
     root.deiconify()
 
     def on_select(event):
@@ -64,12 +64,12 @@ def show_popup_menu(snippets):
             snippet_text = snippets[index][1]
             expanded_text = expand_variables(snippet_text)
             pyperclip.copy(expanded_text)
-        root.destroy()
+            root.destroy()
 
     listbox = tk.Listbox(root, width=80, height=20)
     for i, (name, _) in enumerate(snippets):
         listbox.insert(tk.END, f"{i+1} - {name}")
-    listbox.pack()
+    listbox.pack(fill=tk.BOTH, expand=True)
     listbox.bind('<<ListboxSelect>>', on_select)
 
     # キャンセル時はウィンドウを閉じる
@@ -81,6 +81,7 @@ def show_popup_menu(snippets):
 
 def main():
     snippet_files = find_snippet_files()
+    print(f"スニペットファイル数: {len(snippet_files)}")  # 追加: スニペット数を表示
     snippets = []
     for file_path in snippet_files:
         name = os.path.splitext(os.path.basename(file_path))[0]
