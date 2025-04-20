@@ -2,7 +2,7 @@ import os
 import glob
 import tkinter as tk
 from tkinter import simpledialog
-import fnmatch
+import pathspec
 import sys
 import pyperclip
 
@@ -11,33 +11,30 @@ COPPAI_DIR = os.path.dirname(os.path.abspath(__file__))
 COPPAIIGNORE_FILE = os.path.join(COPPAI_DIR, '.coppaiignore')
 
 def load_ignore_patterns():
-    patterns = []
     if os.path.exists(COPPAIIGNORE_FILE):
         with open(COPPAIIGNORE_FILE, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#'):
-                    patterns.append(line)
-    return patterns
+            spec = pathspec.PathSpec.from_lines('gitwildmatch', f)
+            return spec
+    return None
 
-def is_ignored(path, patterns):
-    for pattern in patterns:
-        if fnmatch.fnmatch(os.path.relpath(path, COPPAI_DIR), pattern):
-            return True
-    return False
+def is_ignored(path, spec):
+    if spec is None:
+        return False
+    rel_path = os.path.relpath(path, COPPAI_DIR)
+    return spec.match_file(rel_path)
 
 def find_snippet_files():
-    patterns = load_ignore_patterns()
+    spec = load_ignore_patterns()
     snippet_files = []
     # 直下のmdファイル
     for file in glob.glob(os.path.join(COPPAI_DIR, '*.md')):
-        if not is_ignored(file, patterns):
+        if not is_ignored(file, spec):
             snippet_files.append(file)
     # 直下のフォルダ内のmdファイル
     for folder in [f for f in os.listdir(COPPAI_DIR) if os.path.isdir(os.path.join(COPPAI_DIR, f))]:
         folder_path = os.path.join(COPPAI_DIR, folder)
         for file in glob.glob(os.path.join(folder_path, '*.md')):
-            if not is_ignored(file, patterns):
+            if not is_ignored(file, spec):
                 snippet_files.append(file)
     return snippet_files
 
