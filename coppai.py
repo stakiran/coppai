@@ -1,0 +1,97 @@
+import os
+import glob
+import tkinter as tk
+from tkinter import simpledialog
+import fnmatch
+import sys
+import pyperclip
+
+# 定数
+COPPAI_DIR = os.path.dirname(os.path.abspath(__file__))
+COPPAIIGNORE_FILE = os.path.join(COPPAI_DIR, '.coppaiignore')
+
+def load_ignore_patterns():
+    patterns = []
+    if os.path.exists(COPPAIIGNORE_FILE):
+        with open(COPPAIIGNORE_FILE, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#'):
+                    patterns.append(line)
+    return patterns
+
+def is_ignored(path, patterns):
+    for pattern in patterns:
+        if fnmatch.fnmatch(os.path.relpath(path, COPPAI_DIR), pattern):
+            return True
+    return False
+
+def find_snippet_files():
+    patterns = load_ignore_patterns()
+    snippet_files = []
+    # 直下のmdファイル
+    for file in glob.glob(os.path.join(COPPAI_DIR, '*.md')):
+        if not is_ignored(file, patterns):
+            snippet_files.append(file)
+    # 直下のフォルダ内のmdファイル
+    for folder in [f for f in os.listdir(COPPAI_DIR) if os.path.isdir(os.path.join(COPPAI_DIR, f))]:
+        folder_path = os.path.join(COPPAI_DIR, folder)
+        for file in glob.glob(os.path.join(folder_path, '*.md')):
+            if not is_ignored(file, patterns):
+                snippet_files.append(file)
+    return snippet_files
+
+def load_snippet(file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        return f.read()
+
+def expand_variables(text):
+    # 現状は %cb% のみ対応
+    cb_content = pyperclip.paste()
+    return text.replace('%cb%', cb_content)
+
+def show_popup_menu(snippets):
+    root = tk.Tk()
+    root.withdraw()
+    # ポップアップメニュー表示のために最小限のウィンドウサイズに設定
+    root.geometry('1x1+0+0')
+    root.deiconify()
+
+    def on_select(event):
+        selection = listbox.curselection()
+        if selection:
+            index = selection[0]
+            snippet_text = snippets[index][1]
+            expanded_text = expand_variables(snippet_text)
+            pyperclip.copy(expanded_text)
+        root.destroy()
+
+    listbox = tk.Listbox(root, width=80, height=20)
+    for i, (name, _) in enumerate(snippets):
+        listbox.insert(tk.END, f"{i+1} - {name}")
+    listbox.pack()
+    listbox.bind('<<ListboxSelect>>', on_select)
+
+    # キャンセル時はウィンドウを閉じる
+    def on_cancel(event):
+        root.destroy()
+    root.bind('<Escape>', on_cancel)
+
+    root.mainloop()
+
+def main():
+    snippet_files = find_snippet_files()
+    snippets = []
+    for file_path in snippet_files:
+        name = os.path.splitext(os.path.basename(file_path))[0]
+        content = load_snippet(file_path)
+        snippets.append((name, content))
+
+    if not snippets:
+        print("スニペットが見つかりませんでした。")
+        sys.exit(0)
+
+    show_popup_menu(snippets)
+
+if __name__ == '__main__':
+    main()
