@@ -88,6 +88,7 @@ def show_popup_menu(snippets):
                 listbox.selection_set(0)
                 listbox.activate(0)
                 listbox.see(0)
+            # もし `return "break"` がないと、例えば `<Up>` キーを押したときに、`on_key_press` が処理した後、デフォルトのリストボックスのキー処理が続けて行われてしまう可能性があります。その結果、リストボックスの選択が 2 回移動される（例えば 1 回のキー押しで 2 つの項目が飛ばされる）ように見えることがあります。
             return "break"
         elif event.keysym == 'Down':
             current = listbox.curselection()
