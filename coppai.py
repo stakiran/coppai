@@ -54,20 +54,68 @@ def show_popup_menu(snippets):
     root.geometry('400x300+100+100')
     root.deiconify()
 
-    def on_select(event):
+    def on_select():
         selection = listbox.curselection()
         if selection:
             index = selection[0]
             snippet_text = snippets[index][1]
             expanded_text = expand_variables(snippet_text)
             pyperclip.copy(expanded_text)
+        root.destroy()
+
+    def on_key_press(event):
+        if event.keysym == 'Return' or event.keysym == 'space':
+            on_select()
+        elif event.keysym == 'Escape':
             root.destroy()
+        elif event.keysym == 'Up':
+            current = listbox.curselection()
+            if current:
+                index = current[0]
+                if index > 0:
+                    listbox.selection_clear(0, tk.END)
+                    listbox.selection_set(index - 1)
+                    listbox.activate(index - 1)
+                    listbox.see(index - 1)
+                else:
+                    # 先頭でupしたら末尾にジャンプ
+                    last_index = listbox.size() - 1
+                    listbox.selection_clear(0, tk.END)
+                    listbox.selection_set(last_index)
+                    listbox.activate(last_index)
+                    listbox.see(last_index)
+            else:
+                listbox.selection_set(0)
+                listbox.activate(0)
+                listbox.see(0)
+            return "break"
+        elif event.keysym == 'Down':
+            current = listbox.curselection()
+            if current:
+                index = current[0]
+                if index < listbox.size() - 1:
+                    listbox.selection_clear(0, tk.END)
+                    listbox.selection_set(index + 1)
+                    listbox.activate(index + 1)
+                    listbox.see(index + 1)
+                else:
+                    # 末尾でdownしたら先頭にジャンプ
+                    listbox.selection_clear(0, tk.END)
+                    listbox.selection_set(0)
+                    listbox.activate(0)
+                    listbox.see(0)
+            else:
+                listbox.selection_set(0)
+                listbox.activate(0)
+                listbox.see(0)
+            return "break"
 
     listbox = tk.Listbox(root, width=80, height=20)
     for i, (name, _) in enumerate(snippets):
         listbox.insert(tk.END, f"{i+1} - {name}")
     listbox.pack(fill=tk.BOTH, expand=True)
-    listbox.bind('<<ListboxSelect>>', on_select)
+    listbox.bind('<Key>', on_key_press)
+    listbox.focus_set()
 
     # キャンセル時はウィンドウを閉じる
     def on_cancel(event):
