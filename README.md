@@ -12,6 +12,8 @@ AI 時代のコピペツール（定型文コピーツール）です。
 
 要件
 
+- Windows
+    - Mac で動くかは試してません
 - Python 3.7+
 - pyperclip
 
@@ -39,7 +41,7 @@ AI 時代のコピペツール（定型文コピーツール）です。
 - スニペット
     - markdown で書いてください
     - coppai.py と同じディレクトリか、ディレクトリ直下に置いてください
-    - /
+    - 例
         - coppai.py
         - snippet1.md ★OK
         - folder/
@@ -55,6 +57,10 @@ AI 時代のコピペツール（定型文コピーツール）です。
 .coppaiignore を使ってください。
 
 書き方は .gitignore と同じです。
+
+# 参考
+- [coppai-sta](https://github.com/stakiran/coppai-sta)
+    - 作者本人による coppai の運用です
 
 # LICENSE
 [MIT](LICENSE)
