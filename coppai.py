@@ -57,17 +57,18 @@ def run_getter_script(script_name):
         return ""
 
 def expand_variables(text):
-    # %getter_xxxx%を検出して実行し、置換する
     def replace_getter(match):
         var_name = match.group(1)
         result = run_getter_script(var_name)
         return result
 
-    # まず%getter_xxxx%を置換
-    text = re.sub(r'%getter_([a-zA-Z0-9_]+)%', replace_getter, text)
-    # 次に%cb%を置換
+    # まずは cb 変数から処理する
+    # これにより cb 変数と getter 変数が混在できる
     cb_content = pyperclip.paste()
     text = text.replace('%cb%', cb_content)
+
+    text = re.sub(r'%getter_([a-zA-Z0-9_]+)%', replace_getter, text)
+
     return text
 
 def show_popup_menu(snippets):
